@@ -29,7 +29,7 @@ A Flask-based application that bridges OpenAI-like requests with Snowflake's Lar
 ## Installation
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/sfc-gh-vyanamandra/sf-oai-adapter.git](https://github.com/sfc-gh-vyanamandra/sf-oai-adapter.git)
+   git clone https://github.com/sfc-gh-vyanamandra/sf-oai-adapter.git
    cd sf-oai-adapter
    ```
 
