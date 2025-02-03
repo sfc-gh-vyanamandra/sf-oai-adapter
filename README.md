@@ -71,7 +71,7 @@ A Flask-based application that bridges OpenAI-like requests with Snowflake's Lar
 
       **Note:**
      
-        * Any requests made for `snowflake[\<llm-name\>]` will be sent to the Snowflake Cortex Rest API.*
+        * Any requests made for `snowflake[<llm-name>]` will be sent to the Snowflake Cortex Rest API.*
 
         * Use an incognito window if the regular browser does not open the page
      
