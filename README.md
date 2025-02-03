@@ -2,6 +2,10 @@
 
 A Flask-based application that bridges OpenAI-like requests with Snowflake's Large Language Model (LLM) services. It offers both a web interface and API endpoints for managing encrypted Snowflake profiles. This application generates JWT tokens that are used to securely access the Snowflake Cortex REST API.
 
+
+❗	This project is not an officially supported product of Snowflake. Use at your own risk.
+
+
 ## Table of Contents
 - [Features](#features)
 - [Installation](#installation)
