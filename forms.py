@@ -33,7 +33,7 @@ class JWTForm(FlaskForm):
     profile = SelectField("Select Key Profile", coerce=int, validators=[DataRequired()])
     access_lifetime = SelectField(
         "Access Lifetime (in minutes)",
-        choices=[(str(x), f"{x} minutes") for x in range(1, 901)],
+        choices=[(str(x), f"{x} minutes") for x in range(1, 61)],
         default='60',
         validators=[DataRequired()]
     )
