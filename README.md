@@ -69,7 +69,13 @@ A Flask-based application that bridges OpenAI-like requests with Snowflake's Lar
    * Using a valid JWT token generated above, requests are then sent to the Cortex API URL as the user corresponding to the KeyProfile.
 
 
-      **Note:** Any requests made for `snowflake[\<llm-name\>]` will be sent to the Snowflake Cortex Rest API.*
+      **Note:**
+     
+        * Any requests made for `snowflake[\<llm-name\>]` will be sent to the Snowflake Cortex Rest API.*
+
+        * Use an incognito window if the regular browser does not open the page
+     
+          * Although this [issue](https://github.com/open-webui/open-webui/issues/9249) is closed, I am suspecting it is still valid.  I could get past this only using by an incognito window for the first time.
           
 
 
