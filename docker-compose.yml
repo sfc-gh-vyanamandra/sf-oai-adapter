@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: openwebui
+    ports:
+      - "8080:8080"
+    environment:
+      - HOST=0.0.0.0
+      - ENABLE_OPENAI_API=true
+      - WEBUI_AUTH=False
+      - WEBUI_NAME="VenuS - OpenWebUI - Snowflake"
+      - OPENAI_API_BASE_URL=http://sf-oai-adapter:8081/v1
+      - OPENAI_API_KEY="not-required"
+    volumes:
+      - ./data/openwebui:/app/backend/data
+    networks:
+      - app-network
+
+  sf-oai-adapter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sf-oai-adapter:latest
+    container_name: sf-oai-adapter
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./data/sf-oai-adapter:/app/instance
+    depends_on:
+      - openwebui
+    environment:
+      - HOST=0.0.0.0
+      - FLASK_APP=run.py
+      - FLASK_ENV=development
+      - SQLALCHEMY_DATABASE_URI=sqlite:///keys.db
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

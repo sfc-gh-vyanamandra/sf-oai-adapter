@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snowflake Cortex REST API Adapter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .container { margin-top: 50px; }
+        .card { border-radius: 10px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); }
+        .btn-primary { background-color: #007bff; border: none; }
+        .btn-primary:hover { background-color: #0056b3; }
+        .modal-lg { max-width: 900px; }
+        .hero-card { border-radius: 10px; padding: 20px; color: white; margin-bottom: 20px; }
+        .hero-card.red { background-color: #ff4d4d; }
+        .hero-card.yellow { background-color: #ffcc00; }
+        .hero-card.green { background-color: #4CAF50; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 class="text-center text-primary mb-4">🔐 Snowflake Cortex REST API Adapter</h2>
+
+<div class="hero-card {% if token and selected_profile %}{% if token_expired %}red{% elif token_expires_soon %}yellow{% else %}green{% endif %}{% else %}red{% endif %}">
+    {% if token and selected_profile %}
+        <h4 class="text-center mb-3">🔑 Currently Active JWT Token</h4>
+        <h5 class="text-center mb-3"><i>Determines where the Cortex REST API request is routed to</i></h4>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Profile</th>
+                        <th scope="col">Snowflake URL</th>
+                        <th scope="col">Username</th>
+                        <th scope="col">Start Time (UTC)</th>
+                        <th scope="col">Valid Until (UTC)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ selected_profile.profile_name }}</td>
+                        <td>{{ selected_profile.snowflake_url }}</td>
+                        <td>{{ selected_profile.username }}</td>
+                        <td>{{ valid_from.strftime('%Y-%m-%d %H:%M:%S UTC') }}</td>
+                        <td>{{ valid_until.strftime('%Y-%m-%d %H:%M:%S UTC') }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <h4>🔑 No Valid JWT Token</h4>
+        <p>Generate a new JWT token to see details here.</p>
+    {% endif %}
+</div>
+
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs mb-4" id="keyManagementTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="generate-tab" data-bs-toggle="tab" href="#generate" role="tab">JWT Auth Generator</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="add-profile-tab" data-bs-toggle="tab" href="#add-profile" role="tab">Add a Key Profile</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="manage-profile-tab" data-bs-toggle="tab" href="#manage-profile" role="tab">Manage Key Profiles</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="keyManagementTabsContent">
+        <!-- Generate JWT Tab -->
+        <div class="tab-pane fade" id="generate" role="tabpanel">
+            <div class="card p-4">
+                <h4 class="text-center text-warning">🔑 Select Key Profile to generate a JWT Token</h4>
+                <form method="POST">
+                    {{ jwt_form.hidden_tag() }}
+                    <div class="mb-3"><label class="form-label">Select Key Profile</label>{{ jwt_form.profile(class="form-select") }}</div>
+                    <div class="mb-3"><label class="form-label">Access Lifetime (Minutes)</label>{{ jwt_form.access_lifetime(class="form-select") }}</div>
+                    <div class="mb-3"><label class="form-label">Keystore Password</label>{{ jwt_form.password(class="form-control", placeholder="Enter Keystore Password") }}</div>
+                    <button type="submit" class="btn btn-primary w-100">{{ jwt_form.submit.label }}</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Add Profile Tab -->
+        <div class="tab-pane fade" id="add-profile" role="tabpanel">
+            <div class="card p-4">
+                <h4 class="text-center text-success">🔑 Add New Profile</h4>
+                <form method="POST">
+                    {{ key_form.hidden_tag() }}
+                    <div class="mb-3"><label class="form-label">Profile Name</label>{{ key_form.profile_name(class="form-control") }}</div>
+                    <div class="mb-3"><label class="form-label">Snowflake URL</label>{{ key_form.snowflake_url(class="form-control") }}</div>
+                    <div class="mb-3"><label class="form-label">Username</label>{{ key_form.username(class="form-control") }}</div>
+                    <div class="mb-3"><label class="form-label">Private Key</label>{{ key_form.private_key(class="form-control") }}</div>
+                    <div class="mb-3"><label class="form-label">Public Key</label>{{ key_form.public_key(class="form-control") }}</div>
+                    <div class="mb-3"><label class="form-label">Keystore Password</label>{{ key_form.password(class="form-control", placeholder="Enter Keystore Password") }}</div>
+                    <button type="submit" class="btn btn-primary w-100">{{ key_form.submit.label }}</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Manage Profiles Tab -->
+        <div class="tab-pane fade" id="manage-profile" role="tabpanel">
+            <div class="card p-4">
+                <h4 class="text-center text-info">🔍 Manage Profiles</h4>
+                <form method="POST" action="{{ url_for('main.get_profile') }}" id="profileForm">
+                    <div class="mb-3">
+                        <label class="form-label">Select Profile</label>
+                        <select id="profileSelect" name="profile_id" class="form-select" required>
+                            <option value="">Select a Profile</option>
+                            {% for profile in profiles %}
+                                <option value="{{ profile.id }}">{{ profile.profile_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Keystore Password</label>
+                        <input type="password" id="keystorePassword" name="password" class="form-control" placeholder="Enter Keystore Password" required>
+                    </div>
+                    <button type="button" class="btn btn-primary w-100" onclick="fetchProfileData()">Open Profile</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="profileModalLabel">Profile Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="modalProfileForm">
+                        <input type="hidden" id="modalProfileId">
+                        <div class="mb-3"><label class="form-label">Profile Name</label><input type="text" id="modalProfileName" class="form-control" readonly></div>
+                        <div class="mb-3"><label class="form-label">Snowflake URL</label><input type="text" id="modalSnowflakeUrl" class="form-control" readonly></div>
+                        <div class="mb-3"><label class="form-label">Username</label><input type="text" id="modalUsername" class="form-control" readonly></div>
+                        <div class="mb-3"><label class="form-label">Private Key</label><textarea id="modalPrivateKey" class="form-control"></textarea></div>
+                        <div class="mb-3"><label class="form-label">Public Key</label><textarea id="modalPublicKey" class="form-control"></textarea></div>
+                        <div class="mb-3"><label class="form-label">Keystore Password</label><input type="password" id="modalKeystorePassword" class="form-control" placeholder="Enter Keystore Password" required></div>
+                    </form>
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-primary" onclick="saveProfile()">Save</button>
+                        <button type="button" class="btn btn-danger" onclick="deleteProfile()">Delete</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function fetchProfileData() {
+        const profileId = document.getElementById('profileSelect').value;
+        const password = document.getElementById('keystorePassword').value;
+
+        fetch("{{ url_for('main.get_profile') }}", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ profile_id: profileId, password: password })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById('modalProfileId').value = profileId;
+                document.getElementById('modalProfileName').value = data.data.profile_name;
+                document.getElementById('modalSnowflakeUrl').value = data.data.snowflake_url;
+                document.getElementById('modalUsername').value = data.data.username;
+                document.getElementById('modalPrivateKey').value = data.data.private_key;
+                document.getElementById('modalPublicKey').value = data.data.public_key;
+
+                const profileModal = new bootstrap.Modal(document.getElementById('profileModal'));
+                profileModal.show();
+            } else {
+                alert('Failed to load profile: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while fetching profile data.');
+        });
+    }
+
+    function saveProfile() {
+        const profileId = document.getElementById('modalProfileId').value;
+        const password = document.getElementById('modalKeystorePassword').value;
+        const privateKey = document.getElementById('modalPrivateKey').value;
+        const publicKey = document.getElementById('modalPublicKey').value;
+
+        fetch(`/edit/${profileId}`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ password: password, private_key: privateKey, public_key: publicKey })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Profile updated successfully.');
+                const profileModal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
+                profileModal.hide();
+            } else {
+                alert('Failed to update profile: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while saving profile data.');
+        });
+    }
+
+    function deleteProfile() {
+        const profileId = document.getElementById('modalProfileId').value;
+        const password = document.getElementById('modalKeystorePassword').value;
+
+        fetch(`/delete/${profileId}`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ password: password })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Profile deleted successfully.');
+                const profileModal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
+                profileModal.hide();
+                window.location.reload();
+            } else {
+                alert('Failed to delete profile: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting profile data.');
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        function activateTabFromHash() {
+            var hash = window.location.hash;
+            if (hash) {
+                var triggerEl = document.querySelector('a[href="' + hash + '"]');
+                if (triggerEl) {
+                    var tab = new bootstrap.Tab(triggerEl);
+                    tab.show();
+                }
+            } else {
+                var defaultTab = new bootstrap.Tab(document.querySelector('#generate-tab'));
+                defaultTab.show();
+            }
+        }
+
+        activateTabFromHash();
+        window.addEventListener('hashchange', activateTabFromHash);
+    });
+</script>
+</body>
+</html>
+
