@@ -8,6 +8,7 @@ A Flask-based application that bridges OpenAI-like requests with Snowflake's Lar
 
 ## Table of Contents
 - [Features](#features)
+- [Quickstart](#quickstart)
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Usage](#usage)
@@ -25,6 +26,52 @@ A Flask-based application that bridges OpenAI-like requests with Snowflake's Lar
 - Transform OpenAI-API-like requests into Snowflake-Cortex-REST-API compatible formats.
 - Web interface for user-friendly key management.
 - API endpoints for programmatic interactions.
+
+## Quickstart
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/sfc-gh-vyanamandra/sf-oai-adapter.git
+   ```
+   
+2. **Ensure docker/docker-compose are installed:**
+   ```
+    % docker -v
+     Docker version 26.1.1, build 4cf5afaefa
+    % docker-compose -v
+     Docker Compose version 2.27.0
+   ```
+   
+3. **Start-up services:**
+
+   This will start up **OpenWebUI** and **sf-oai-adapter** services.
+   
+   ```bash
+   docker-compose up -d
+   ```
+   
+4. **Set up the KeyStore password first:**
+
+   * Use the browser to navigate to http://0.0.0.0:8081. If there is no keystore password already set up in the system, it will prompt you to enter one.
+   
+       ** Remember this password as it will be used for Inserting/Updating/Deleting KeyProfiles from the KeyStore.
+   
+       ** This password is also used to generate a valid JWT token to be used while talking to Snowflake Cortex API.
+     
+   * Add a KeyProfile using the **Add a Key Profile** tab of http://0.0.0.0:8081
+     
+   * Generate a JWT Authtoken based on a KeyProfile.
+     
+           
+5. **Open OpenWebUI and use the Snowflake hosted LLM models for completions:**
+
+   * This has been setup to use the local adapter url for talking to Snowflake.
+  
+   * Using a valid JWT token generated above, requests are then sent to the Cortex API URL as the user corresponding to the KeyProfile.
+
+
+      **Note:** Any requests made for `snowflake[\<llm-name\>]` will be sent to the Snowflake Cortex Rest API.*
+          
+
 
 ## Installation
 1. **Clone the repository:**
