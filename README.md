@@ -75,7 +75,7 @@ A Flask-based application that bridges OpenAI-like requests with Snowflake's Lar
 
         * Use an incognito window if the regular browser does not open the page
      
-          * Although this [issue](https://github.com/open-webui/open-webui/issues/9249) is closed, I am suspecting it is still valid.  I could get past this only using by an incognito window for the first time.
+          * Although this [issue](https://github.com/open-webui/open-webui/issues/9249) is closed, I am suspecting it is still valid.  I could get past this only by using an incognito window for the first time.
           
 
 
