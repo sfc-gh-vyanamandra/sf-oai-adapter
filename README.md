@@ -179,7 +179,7 @@ class Config:
 
 - **Key Encryption**: Uses `Fernet` encryption for storing keys securely.
 - **Password Hashing**: Utilizes `werkzeug.security` for secure password management.
-- **JWT Tokens**: Generated using `jwt` for secure API access.
+- **JWT Tokens**: Generated using `PyJWT` for secure API access.
 
 Example function to encrypt a key:
 ```python
